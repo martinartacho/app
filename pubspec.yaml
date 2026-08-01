@@ -1,7 +1,7 @@
 name: femcastells
 description: "Gestió de colles castelleres"
 publish_to: 'none'
-version: 1.0.2+5
+version: 1.1.0+6
 
 environment:
   sdk: '>=3.4.3 <4.0.0'
