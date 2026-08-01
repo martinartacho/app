@@ -144,6 +144,18 @@ abstract class AppLocalizations {
   /// **'Historial'**
   String get menuHistorial;
 
+  /// No description provided for @menuMore.
+  ///
+  /// In ca, this message translates to:
+  /// **'Més opcions'**
+  String get menuMore;
+
+  /// No description provided for @menuLogout.
+  ///
+  /// In ca, this message translates to:
+  /// **'Tancar sessió'**
+  String get menuLogout;
+
   /// No description provided for @menuAbout.
   ///
   /// In ca, this message translates to:

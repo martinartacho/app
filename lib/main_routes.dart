@@ -15,9 +15,12 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'dart:async';
 import 'package:go_router/go_router.dart';
 
+final RouteObserver<ModalRoute<void>> routeObserver = RouteObserver<ModalRoute<void>>();
+
 GoRouter appRouter(AuthenticationBloc authenticationBloc) {
   return GoRouter(
     initialLocation: splashRoute,
+    observers: [routeObserver],
     routes: [
       GoRoute(
         name: homeRoute,
@@ -37,7 +40,7 @@ GoRouter appRouter(AuthenticationBloc authenticationBloc) {
       GoRoute(
         name: gdprConsentRoute,
         path: gdprConsentRoute,
-        builder: (context, state) => const GdprConsentPage(),
+        builder: (context, state) => GdprConsentPage(fromMenu: state.extra == true),
       ),
       GoRoute(
         name: aboutRoute,

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:femcastells/features/menu/presentation/widgets/menu_widget.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:femcastells/features/menu/presentation/widgets/arc_menu.dart';
 import 'package:femcastells/features/home/data/home_service.dart';
 import 'package:femcastells/features/notifications/presentation/pages/noticia_detail_page.dart';
 import 'package:femcastells/features/login/login.dart' hide sl;
 import 'package:femcastells/l10n/app_localizations.dart';
+import 'package:femcastells/main_routes.dart' show routeObserver;
+import 'package:femcastells/services/firebase_notification_service.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -17,7 +20,7 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with RouteAware {
   final HomeService _service = HomeService();
   late Future<HomeData> _future;
 
@@ -25,7 +28,27 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _future = _service.fetchHome();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _checkGdpr());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkGdpr();
+      FirebaseNotificationService.instance.syncToken();
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    setState(() => _future = _service.fetchHome());
   }
 
   Future<void> _checkGdpr() async {
@@ -45,7 +68,8 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final translate = AppLocalizations.of(context)!;
 
-    return Scaffold(
+    return ArcMenu(
+      child: Scaffold(
       appBar: AppBar(
         title: Text(translate.menuHome),
         actions: [
@@ -55,7 +79,6 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      drawer: const MenuWidget(),
       body: FutureBuilder<HomeData>(
         future: _future,
         builder: (context, snapshot) {
@@ -66,6 +89,8 @@ class _HomePageState extends State<HomePage> {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
           final data = snapshot.data!;
+          final unread = data.recent.where((n) => n.unread).toList();
+          final user = context.read<AuthenticationBloc>().userEntity;
           return RefreshIndicator(
             onRefresh: () async {
               setState(() => _future = _service.fetchHome());
@@ -73,8 +98,6 @@ class _HomePageState extends State<HomePage> {
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                _CollaHeader(),
-                const SizedBox(height: 12),
                 _LoginStatsCard(data: data),
                 const SizedBox(height: 16),
                 _SectionHeader(
@@ -82,21 +105,22 @@ class _HomePageState extends State<HomePage> {
                   unreadCount: data.unreadCount,
                 ),
                 const SizedBox(height: 8),
-                if (data.recent.isEmpty)
-                  const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(32),
-                      child: Text('No hi ha notícies'),
-                    ),
+                if (unread.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: Text('Cap notícia pendent', style: TextStyle(color: Colors.grey)),
                   )
                 else
-                  ...data.recent.map((n) => _NoticiaHeadline(noticia: n)),
+                  ...unread.map((n) => _NoticiaHeadline(noticia: n)),
+                const SizedBox(height: 32),
+                _BrandLogo(collaLogoUrl: user?.collaLogoUrl),
+                const SizedBox(height: 16),
               ],
             ),
           );
         },
       ),
-    );
+    ));
   }
 }
 
@@ -184,52 +208,40 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-class _CollaHeader extends StatelessWidget {
-  const _CollaHeader();
+class _BrandLogo extends StatelessWidget {
+  final String? collaLogoUrl;
+  const _BrandLogo({this.collaLogoUrl});
 
   @override
   Widget build(BuildContext context) {
-    final user = context.read<AuthenticationBloc>().userEntity;
-    final logoUrl = user?.collaLogoUrl;
-    final collaName = user?.collaName ?? user?.castellerActiveAlias ?? '';
+    const size = 120.0;
+    Widget logo;
 
-    if (logoUrl != null) {
-      return Row(
-        children: [
-          Image.network(
-            logoUrl,
-            height: 48,
-            fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) => _CollaNameFallback(name: collaName),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            collaName,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-        ],
+    if (collaLogoUrl != null) {
+      logo = Image.network(
+        collaLogoUrl!,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _femcastellsLogo(size),
       );
+    } else {
+      logo = _femcastellsLogo(size);
     }
 
-    if (collaName.isNotEmpty) {
-      return _CollaNameFallback(name: collaName);
-    }
-
-    return const SizedBox.shrink();
-  }
-}
-
-class _CollaNameFallback extends StatelessWidget {
-  final String name;
-  const _CollaNameFallback({required this.name});
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      name,
-      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    return Center(
+      child: ClipOval(
+        child: SizedBox(width: size, height: size, child: logo),
+      ),
     );
   }
+
+  Widget _femcastellsLogo(double size) => SvgPicture.asset(
+        'assets/icons/femcastells_logo.svg',
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+      );
 }
 
 class _NoticiaHeadline extends StatelessWidget {
