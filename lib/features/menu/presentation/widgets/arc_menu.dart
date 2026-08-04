@@ -53,58 +53,66 @@ class _ArcMenuState extends State<ArcMenu> with SingleTickerProviderStateMixin {
 
   void _navigate(String route) {
     _ctrl.reverse().then((_) {
-      if (mounted) {
-        setState(() => _open = false);
-        if (route == _kMoreSheet) {
-          _showMoreSheet();
-        } else {
-          context.pushNamed(route);
-        }
+      if (!mounted) return;
+      setState(() => _open = false);
+      if (route == _kMoreSheet) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _showMoreSheet();
+        });
+      } else {
+        context.pushNamed(route);
       }
     });
   }
 
   void _showMoreSheet() {
     final t = AppLocalizations.of(context)!;
-    showModalBottomSheet(
+    showModalBottomSheet<String>(
       context: context,
-      builder: (_) => SafeArea(
+      builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
               leading: const Icon(Icons.info_outline),
               title: Text(t.menuAbout),
-              onTap: () { Navigator.pop(context); context.pushNamed(aboutRoute); },
+              onTap: () => Navigator.of(ctx).pop('about'),
             ),
             ListTile(
               leading: const Icon(Icons.privacy_tip_outlined),
               title: Text(t.menuPrivacy),
-              onTap: () { Navigator.pop(context); context.push(gdprConsentRoute, extra: true); },
+              onTap: () => Navigator.of(ctx).pop('privacy'),
             ),
             ListTile(
               leading: const Icon(Icons.help_outline),
               title: Text(t.menuHelp),
-              onTap: () { Navigator.pop(context); context.pushNamed(helpRoute); },
+              onTap: () => Navigator.of(ctx).pop('help'),
             ),
             const Divider(height: 1),
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
               title: Text(t.menuLogout, style: const TextStyle(color: Colors.red)),
-              onTap: () async {
-                const storage = FlutterSecureStorage();
-                final bloc = context.read<AuthenticationBloc>();
-                await storage.deleteAll();
-                if (mounted) {
-                  Navigator.pop(context);
-                  bloc.add(AuthenticationLogoutPressed());
-                }
-              },
+              onTap: () => Navigator.of(ctx).pop('logout'),
             ),
           ],
         ),
       ),
-    );
+    ).then((result) async {
+      if (!mounted || result == null) return;
+      switch (result) {
+        case 'about':
+          context.pushNamed(aboutRoute);
+        case 'privacy':
+          context.push(gdprConsentRoute, extra: true);
+        case 'help':
+          context.pushNamed(helpRoute);
+        case 'logout':
+          const storage = FlutterSecureStorage();
+          final bloc = context.read<AuthenticationBloc>();
+          await storage.deleteAll();
+          if (mounted) bloc.add(AuthenticationLogoutPressed());
+      }
+    });
   }
 
   List<_MenuItem> _buildItems(AppLocalizations t) => [
