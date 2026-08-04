@@ -1,3 +1,4 @@
+import 'package:femcastells/core/navigation/route_names.dart';
 import 'package:femcastells/features/login/login.dart';
 
 import 'package:flutter/material.dart';
@@ -5,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:formz/formz.dart';
+import 'package:go_router/go_router.dart';
 import 'package:femcastells/l10n/app_localizations.dart';
 
 const _storage = FlutterSecureStorage();
@@ -93,6 +95,11 @@ class _LoginFormState extends State<LoginForm> {
                 _PasswordInput(controller: _passwordCtrl),
                 const SizedBox(height: 16),
                 _LoginButton(),
+                const SizedBox(height: 4),
+                TextButton(
+                  onPressed: () => context.push(forgotPasswordRoute),
+                  child: const Text('Has oblidat la contrasenya?'),
+                ),
               ],
             ),
           ),

@@ -9,6 +9,7 @@ import 'package:femcastells/features/user_profile/presentation/routes.dart';
 import 'package:femcastells/features/gdpr/gdpr_consent_page.dart';
 import 'package:femcastells/features/info/about_page.dart';
 import 'package:femcastells/features/info/help_page.dart';
+import 'package:femcastells/features/login/presentation/pages/forgot_password_page.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -52,6 +53,11 @@ GoRouter appRouter(AuthenticationBloc authenticationBloc) {
         path: helpRoute,
         builder: (context, state) => const HelpPage(),
       ),
+      GoRoute(
+        name: forgotPasswordRoute,
+        path: forgotPasswordRoute,
+        builder: (context, state) => const ForgotPasswordPage(),
+      ),
     ],
     // changes on the listenable will cause the router to refresh it's route
     refreshListenable: StreamToListenable([authenticationBloc.stream]),
@@ -65,7 +71,9 @@ GoRouter appRouter(AuthenticationBloc authenticationBloc) {
       if (authenticationBloc.state ==
           const AuthenticationState.unauthenticated()) {
         // If the user is not authenticated, redirect to the login page
+        // (except forgot-password, which is accessible without auth)
         EasyLoading.dismiss();
+        if (state.matchedLocation == forgotPasswordRoute) return null;
         return loginRoute;
       } else {
         // If the user is authenticated, redirect to the home page

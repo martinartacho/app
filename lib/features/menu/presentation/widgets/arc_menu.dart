@@ -119,7 +119,7 @@ class _ArcMenuState extends State<ArcMenu> with SingleTickerProviderStateMixin {
         _MenuItem(Icons.home_rounded, t.menuHome, homeRoute),
         _MenuItem(Icons.calendar_month, t.menuEvents, eventsRoute),
         _MenuItem(Icons.hub_outlined, t.menuPublicDisplayUrl, publicDisplayUrlRoute),
-        _MenuItem(Icons.layers_outlined, t.menuRondes, rondesRoute),
+        _MenuItem(Icons.format_list_numbered, t.menuRondes, rondesRoute),
         _MenuItem(Icons.history, t.menuHistorial, historialRoute),
         _MenuItem(Icons.notifications_none, t.menuNotifications, notificationsRoute),
         _MenuItem(Icons.more_horiz, t.menuMore, _kMoreSheet),

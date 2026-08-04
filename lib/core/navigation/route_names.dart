@@ -12,3 +12,4 @@ const String userProfileRoute = '/userProfile';
 const String gdprConsentRoute = '/gdprConsent';
 const String aboutRoute = '/about';
 const String helpRoute = '/help';
+const String forgotPasswordRoute = '/forgot-password';

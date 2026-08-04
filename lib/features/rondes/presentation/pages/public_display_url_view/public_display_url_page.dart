@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:femcastells/l10n/app_localizations.dart';
+import 'package:femcastells/features/menu/presentation/widgets/arc_menu.dart';
 
 import 'package:femcastells/features/rondes/rondes.dart';
 
@@ -36,12 +37,14 @@ class PublicDisplayUrlViewContentsPage extends StatelessWidget {
           EasyLoading.dismiss();
           PublicDisplayUrlViewStateWithUrl s =
               state as PublicDisplayUrlViewStateWithUrl;
-          return Scaffold(
-            appBar: AppBar(
-              title: Text(translate.menuPublicDisplayUrl),
-            ),
-            body: Center(
-              child: _publicDisplayUrlViewContentsBody(s, translate),
+          return ArcMenu(
+            child: Scaffold(
+              appBar: AppBar(
+                title: Text(translate.menuPublicDisplayUrl),
+              ),
+              body: Center(
+                child: _publicDisplayUrlViewContentsBody(s, translate),
+              ),
             ),
           );
         } else {
