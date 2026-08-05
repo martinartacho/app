@@ -126,6 +126,20 @@ class AuthenticationRepository {
     );
   }
 
+  Future<void> loginWithToken(String token) async {
+    await _saveAuthToken(token);
+    try {
+      final userEntity = await _fetchUserData();
+      _controller.add(AuthenticationResult(
+        status: AuthenticationStatus.authenticated,
+        userEntity: userEntity,
+      ));
+    } on AuthenticationException {
+      _controller.add(AuthenticationResult(status: AuthenticationStatus.unauthenticated));
+      throw AuthenticationException('Token invàlid rebut del servidor.');
+    }
+  }
+
   Future<void> logOut() async {
     await sharedPreferences.remove('auth_token');
   }
