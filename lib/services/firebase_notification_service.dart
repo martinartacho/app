@@ -108,15 +108,17 @@ class FirebaseNotificationService {
     // Set up message handlers
     await _setupMessageHandlers();
 
-    // Get FCM token for device registration
-    final token = await _messaging.getToken();
-    debugPrint('FCM Token: $token');
-    if (token != null) {
-      await _sendTokenToBackend(token);
+    // Get FCM token for device registration (may fail when sideloaded)
+    try {
+      final token = await _messaging.getToken();
+      debugPrint('FCM Token: $token');
+      if (token != null) {
+        await _sendTokenToBackend(token);
+      }
+      _messaging.onTokenRefresh.listen(_sendTokenToBackend);
+    } catch (e) {
+      debugPrint('FCM token error (notifications disabled): $e');
     }
-
-    // Refresh token when it changes
-    _messaging.onTokenRefresh.listen(_sendTokenToBackend);
   }
 
   Future<void> syncToken() async {
