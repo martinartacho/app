@@ -1,4 +1,6 @@
+import 'package:dio/dio.dart';
 import 'package:femcastells/core/navigation/route_names.dart';
+import 'package:femcastells/core/network/dio_factory.dart';
 import 'package:femcastells/features/login/login.dart';
 
 import 'package:flutter/material.dart';
@@ -100,10 +102,53 @@ class _LoginFormState extends State<LoginForm> {
                   onPressed: () => context.push(forgotPasswordRoute),
                   child: const Text('Has oblidat la contrasenya?'),
                 ),
+                const Divider(height: 24),
+                _DemoLoginButton(),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _DemoLoginButton extends StatefulWidget {
+  @override
+  State<_DemoLoginButton> createState() => _DemoLoginButtonState();
+}
+
+class _DemoLoginButtonState extends State<_DemoLoginButton> {
+  bool _loading = false;
+
+  Future<void> _enterDemo() async {
+    setState(() => _loading = true);
+    try {
+      final response = await DioFactory.getInstance().post('/api/demo/register');
+      final token = response.data['access_token'] as String;
+      if (!mounted) return;
+      await context.read<AuthenticationRepository>().loginWithToken(token);
+    } on DioException catch (e) {
+      if (!mounted) return;
+      final msg = e.response?.data?['message'] ?? 'Error en accedir a la demo.';
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(msg.toString())));
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: _loading ? null : _enterDemo,
+        icon: _loading
+            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+            : const Icon(Icons.play_circle_outline),
+        label: const Text('Prova la demo'),
       ),
     );
   }
