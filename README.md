@@ -1,178 +1,81 @@
+# FemCastells — App mòbil
 
-![badge](https://gist.githubusercontent.com/FemPinya/117df38e6f56715a9ef8d16012d190fe/raw/fp_mobile_coverage.svg)
+App Flutter per a la gestió de colles castelleres, connectada al backend [fempinya4](https://github.com/martinartacho/fempinya4).
 
-# fempinya3_flutter_app
+> **Fork de** [AssociacioFemPinya/app](https://github.com/AssociacioFemPinya/app)
+> Els dos projectes han divergit considerablement. FemCastells és una aplicació independent
+> orientada al backend fempinya4 (Laravel 13 + Filament 5). No és compatible per fer merge
+> directe amb el repo original.
 
-## Run the App with Sample Data (Mocked Entities)
+---
 
-To start the app using sample data, simply use the following command:
+## Stack
 
-    flutter run --dart-define=USE_MOCK_API=true
+| Capa | Tecnologia |
+|---|---|
+| Framework | Flutter (Dart) |
+| Estat | BLoC |
+| Navegació | GoRouter |
+| HTTP | Dio + Sanctum token |
+| Notificacions | Firebase Cloud Messaging |
+| Auth local | FlutterSecureStorage |
 
-### Log In with Sample User Account (Mocked User)
+## Funcionalitats actuals
 
-To log in using a sample user account, please enter the email "alanbover@gmail.com". You can use any password you like.
+- Login amb email i contrasenya (Sanctum)
+- Recuperació de contrasenya via codi per correu (sense sortir de l'app)
+- Home amb notícies de la colla
+- Llista d'events i gestió d'assistència
+- Rondes (historial d'actuacions amb pinya en WebView)
+- Perfil d'usuari
+- Menú arc circular accessible des de totes les pantalles
+- Suggeriments a l'administrador
+- Consentiment GDPR
+- Notificacions push (FCM)
+- Pantalla de projecció pública de la pinya (per TV/projector)
 
-Make sure to use these details to avoid any login issues.
+## Backend
 
-## Testing Coverage Guide
+El backend és [femcastells.artacho.org](https://femcastells.artacho.org), basat en [martinartacho/fempinya4](https://github.com/martinartacho/fempinya4).
 
-The coverage report is automatically generated and available at [repository pages](https://github.com/AssociacioFemPinya/mobile/coverage/index.html). This process is configured using GitHub Actions defined in [.github/workflows/tests.yml](.github/workflows/tests.yml) file.
+L'URL base es pot sobreescriure en compilació:
 
-To generate a coverage report locally from an `lcov` file, you'll need the `genhtml` tool, which is part of the `lcov` package. Here's how you can do it:
-
-### Installation
-
-**For Ubuntu Users:**
-
-Install `lcov` to get the `genhtml` tool:
-
-    sudo apt-get install lcov
-
-### Steps to Generate Coverage Report
-
-Generate the lcov File, running Flutter tests with coverage enabled:
-
-    flutter test --coverage
-
-Generate the Coverage Report, use the genhtml tool to convert the lcov file into an HTML report:
-
-    genhtml coverage/lcov.info -o coverage/html
-
-View the Report, open the generated report in your web browser. For example, using Brave Browser:
-
-    brave-browser coverage/html/index.html
-
-## TO DOCUMENT SOMEWHERE
-
-### Nullables in bloc states
-Do not set properties in the bloc state as null after initialization. The reason is that, when calling copyWith(), if it's not specifically passed, the value will be null. Hence you don't know if the value is null because the intention is to change some other property, or because we want to set it to null.
-
-To avoid this situation, you can have a boolean next to the value to enable/disable the functionality. For example a filter dayFilter has dayFilterEnabled next to it.
-
-## API Specifications for Endpoints `/rondes`, `/ronda`, and `/publicDisplayUrl`
-===========================================================
-
-### Endpoint: `/rondes`
-
-#### Method: `GET`
-
-#### Description:
-Returns a list of rondes for a given user email.
-
-#### Request Parameters:
-
-* `email`: The user's email address (required)
-
-#### Response:
-
-* `200 OK`: The list of rondes for the given user email.
-* `400 Bad Request`: The request is missing the required `email` parameter or the parameter is null.
-
-#### Response Body:
-
-* A list of ronda objects, each containing:
-	+ `id`: The ID of the ronda.
-	+ `eventName`: The name of the event.
-	+ `publicUrl`: The public URL of the ronda.
-	+ `ronda`: The ronda number.
-
-#### Example Response:
-```json
-[
-  {
-    "id": 0,
-    "eventName": "Lorem ipsum dolor",
-    "publicUrl": "https://app.fempinya.cat/public/display/AireNou/WWN5Wk9aTnl4Q3FHUTE5bklsTkdCOFEvQ1BLWVB4M1BveVpRYlNJbkE1bDZ2SVBNTUlIbzI3S1RXUGRlVlBsUQ==",
-    "ronda": 0
-  },
-  {
-    "id": 1,
-    "eventName": "Lorem ipsum dolor",
-    "publicUrl": "https://app.fempinya.cat/public/display/AireNou/WWN5Wk9aTnl4Q3FHUTE5bklsTkdCOFEvQ1BLWVB4M1BveVpRYlNJbkE1bDZ2SVBNTUlIbzI3S1RXUGRlVlBsUQ==",
-    "ronda": 1
-  },
-  {
-    "id": 2,
-    "eventName": "sit amet.",
-    "publicUrl": "",
-    "ronda": 2
-  },
-  {
-    "id": 3,
-    "eventName": "Sed quisquam",
-    "publicUrl": "mail@mail.com",
-    "ronda": 3
-  }
-]
+```bash
+flutter run --dart-define=API_BASE_URL=https://el-teu-domini.org
 ```
 
-### Endpoint: `/ronda`
+## Executar en local (dades mock)
 
-#### Method: `GET`
-
-#### Description:
-Returns a single ronda by ID.
-
-#### Request Parameters:
-
-* `id`: The ID of the ronda (required)
-
-#### Response:
-
-* `200 OK`: The ronda with the given ID.
-* `400 Bad Request`: The request is missing the required `id` parameter or the parameter is null.
-* `404 Not Found`: The ronda with the given ID was not found.
-
-#### Response Body:
-
-* A ronda object, containing:
-	+ `id`: The ID of the ronda.
-	+ `eventName`: The name of the event.
-	+ `publicUrl`: The public URL of the ronda.
-	+ `ronda`: The ronda number.
-
-#### Example Response:
-```json
-{
-  "id": 0,
-  "eventName": "Lorem ipsum dolor",
-  "publicUrl": "https://app.fempinya.cat/public/display/AireNou/WWN5Wk9aTnl4Q3FHUTE5bklsTkdCOFEvQ1BLWVB4M1BveVpRYlNJbkE1bDZ2SVBNTUlIbzI3S1RXUGRlVlBsUQ==",
-  "ronda": 0
-}
+```bash
+flutter run --dart-define=USE_MOCK_API=true
 ```
 
-### Endpoint: `/publicDisplayUrl`
+## Compilar APK de release
 
-#### Method: `GET`
-
-#### Description:
-Returns the public display URL for a given user email.
-
-#### Request Parameters:
-
-* `email`: The user's email address (required)
-
-#### Response:
-
-* `200 OK`: The public display URL for the given user email.
-* `400 Bad Request`: The request is missing the required `email` parameter or the parameter is null.
-* `404 Not Found`: The user email is unknown.
-
-#### Response Body:
-
-* `publicUrl`: The public display URL for the given user email.
-
-#### Example Response:
-```json
-{
-  "publicUrl": "https://app.fempinya.cat/public/display/AireNou/WWN5Wk9aTnl4Q3FHUTE5bklsTkdCOFEvQ1BLWVB4M1BveVpRYlNJbkE1bDZ2SVBNTUlIbzI3S1RXUGRlVlBsUQ=="
-}
+```bash
+flutter build apk --release
+# → build/app/outputs/flutter-apk/app-release.apk
 ```
 
-# Issues
+> Les APKs de cada versió estan disponibles a [Releases](../../releases).
 
-### Make api calls when running in chrome
-Seems a cors problem that it's not fixed even thought we add the headers on the api
+## Versions
 
-https://stackoverflow.com/questions/65630743/how-to-solve-flutter-web-api-cors-error-only-with-dart-code/74783428#74783428
+| Versió | Novetats principals |
+|---|---|
+| 1.2.0+7 | Recuperació de contrasenya per codi, fix crash Firebase sideloaded |
+| 1.1.0+6 | Menú arc, push notifications, auto-login, suggeriments |
+| 1.0.2+5 | Fix URL login producció |
+| 1.0.1+4 | Icones adaptatives Android |
+| 1.0.0+3 | Primera versió funcional connectada a fempinya4 |
+
+## Relació amb AssociacioFemPinya/app
+
+Aquest repo va néixer com a fork de l'app original de FemPinya per adaptar-la al backend fempinya4. Des de llavors ha divergit significativament:
+
+- Connexió a una API diferent (fempinya4 vs FemPinya3)
+- Branding FemCastells (logo, colors, nom)
+- Funcionalitats pròpies: arc menu, suggeriments, recuperació de contrasenya per codi
+- L'upstream té 1 commit que no existeix aquí (`implement notification view #38`), però la funcionalitat equivalent ja existeix via el sistema de notícies
+
+No es preveu sincronitzar amb l'upstream.
