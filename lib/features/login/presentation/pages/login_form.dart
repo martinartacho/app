@@ -75,56 +75,87 @@ class _LoginFormState extends State<LoginForm> {
           context.read<LoginFormBloc>().add(const LoginResetStatus());
         }
       },
-      child: Align(
-        alignment: const Alignment(0, -1 / 3),
-        child: Card(
-          elevation: 8,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  translate.loginPageTitle,
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-                _MailInput(controller: _emailCtrl),
-                const SizedBox(height: 12),
-                _PasswordInput(controller: _passwordCtrl),
-                const SizedBox(height: 16),
-                _LoginButton(),
-                const SizedBox(height: 4),
-                TextButton(
-                  onPressed: () => context.push(forgotPasswordRoute),
-                  child: const Text('Has oblidat la contrasenya?'),
-                ),
-                const Divider(height: 24),
-                _DemoLoginButton(),
-              ],
+      child: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(24, 64, 24, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Card(
+                    elevation: 8,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            translate.loginPageTitle,
+                            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 16),
+                          _MailInput(controller: _emailCtrl),
+                          const SizedBox(height: 12),
+                          _PasswordInput(controller: _passwordCtrl),
+                          const SizedBox(height: 16),
+                          _LoginButton(),
+                          const SizedBox(height: 4),
+                          TextButton(
+                            onPressed: () => context.push(forgotPasswordRoute),
+                            child: const Text('Has oblidat la contrasenya?'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _DemoSection(),
+                ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 }
 
-class _DemoLoginButton extends StatefulWidget {
+class _DemoSection extends StatefulWidget {
   @override
-  State<_DemoLoginButton> createState() => _DemoLoginButtonState();
+  State<_DemoSection> createState() => _DemoSectionState();
 }
 
-class _DemoLoginButtonState extends State<_DemoLoginButton> {
-  bool _loading = false;
+class _DemoSectionState extends State<_DemoSection> {
+  final _emailCtrl    = TextEditingController();
+  final _passwordCtrl = TextEditingController();
+  bool _obscure  = true;
+  bool _accepted = false;
+  bool _loading  = false;
+
+  bool get _canSubmit {
+    final email = _emailCtrl.text.trim();
+    final pw    = _passwordCtrl.text;
+    return email.contains('@') && email.length > 4 && pw.length >= 8 && _accepted && !_loading;
+  }
+
+  @override
+  void dispose() {
+    _emailCtrl.dispose();
+    _passwordCtrl.dispose();
+    super.dispose();
+  }
 
   Future<void> _enterDemo() async {
     setState(() => _loading = true);
     try {
-      final response = await DioFactory.getInstance().post('/api/demo/register');
+      final response = await DioFactory.getInstance().post('/api/demo/register', data: {
+        'email':    _emailCtrl.text.trim().toLowerCase(),
+        'password': _passwordCtrl.text,
+      });
       final token = response.data['access_token'] as String;
       if (!mounted) return;
       await context.read<AuthenticationRepository>().loginWithToken(token);
@@ -141,14 +172,76 @@ class _DemoLoginButtonState extends State<_DemoLoginButton> {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton.icon(
-        onPressed: _loading ? null : _enterDemo,
-        icon: _loading
-            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-            : const Icon(Icons.play_circle_outline),
-        label: const Text('Prova la demo'),
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: colors.outlineVariant),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Prova la demo',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: colors.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _emailCtrl,
+            keyboardType: TextInputType.emailAddress,
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(
+              labelText: 'Correu electrònic',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              isDense: true,
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _passwordCtrl,
+            obscureText: _obscure,
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(
+              labelText: 'Contrasenya (mínim 8 caràcters)',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              isDense: true,
+              suffixIcon: IconButton(
+                icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility, size: 20),
+                onPressed: () => setState(() => _obscure = !_obscure),
+              ),
+            ),
+          ),
+          const SizedBox(height: 2),
+          CheckboxListTile(
+            value: _accepted,
+            onChanged: (v) => setState(() => _accepted = v ?? false),
+            title: const Text(
+              'Accepto accedir a dades de demostració',
+              style: TextStyle(fontSize: 12),
+            ),
+            controlAffinity: ListTileControlAffinity.leading,
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+          ),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _canSubmit ? _enterDemo : null,
+              icon: _loading
+                  ? const SizedBox(
+                      width: 16, height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.check_circle_outline, size: 18),
+              label: const Text('Prova la demo'),
+            ),
+          ),
+        ],
       ),
     );
   }
