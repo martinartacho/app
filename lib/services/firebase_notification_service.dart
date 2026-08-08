@@ -110,7 +110,10 @@ class FirebaseNotificationService {
 
     // Get FCM token for device registration (may fail when sideloaded)
     try {
-      final token = await _messaging.getToken();
+      final token = await _messaging.getToken().timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => null,
+      );
       debugPrint('FCM Token: $token');
       if (token != null) {
         await _sendTokenToBackend(token);
@@ -285,7 +288,8 @@ class FirebaseNotificationService {
     });
 
     // App opened from terminated state via notification
-    final initialMessage = await _messaging.getInitialMessage();
+    final initialMessage = await _messaging.getInitialMessage()
+        .timeout(const Duration(seconds: 5), onTimeout: () => null);
     if (initialMessage != null) {
       debugPrint('App opened from terminated state via notification');
       _handleBackgroundMessage(initialMessage);
